@@ -43,6 +43,8 @@ logger = logging.getLogger(__name__)
 
 _SAFE_WEIGHTS_NAME = "model.safetensors"
 _SAFE_WEIGHTS_INDEX_NAME = "model.safetensors.index.json"
+_DIFFUSERS_SAFE_WEIGHTS_NAME = "diffusion_pytorch_model.safetensors"
+_DIFFUSERS_SAFE_WEIGHTS_INDEX_NAME = "diffusion_pytorch_model.safetensors.index.json"
 _SNAPSHOT_PATTERNS = ("*.safetensors", "*.safetensors.index.json")
 
 
@@ -179,15 +181,19 @@ def _resolve_checkpoint_index(pretrained_path: str) -> _CheckpointIndex:
             )
         )
 
-    index_path = checkpoint_directory / _SAFE_WEIGHTS_INDEX_NAME
-    if index_path.is_file():
-        return _index_sharded_checkpoint(checkpoint_directory, index_path)
+    for index_name in (_SAFE_WEIGHTS_INDEX_NAME, _DIFFUSERS_SAFE_WEIGHTS_INDEX_NAME):
+        index_path = checkpoint_directory / index_name
+        if index_path.is_file():
+            return _index_sharded_checkpoint(checkpoint_directory, index_path)
 
-    single_file = checkpoint_directory / _SAFE_WEIGHTS_NAME
-    if single_file.is_file():
-        return _index_single_file(single_file)
+    for weights_name in (_SAFE_WEIGHTS_NAME, _DIFFUSERS_SAFE_WEIGHTS_NAME):
+        single_file = checkpoint_directory / weights_name
+        if single_file.is_file():
+            return _index_single_file(single_file)
     raise ValueError(
-        "MVP requires model.safetensors or model.safetensors.index.json under "
+        "MVP requires model.safetensors, model.safetensors.index.json, "
+        "diffusion_pytorch_model.safetensors, or "
+        "diffusion_pytorch_model.safetensors.index.json under "
         f"{checkpoint_directory}"
     )
 
@@ -887,6 +893,7 @@ def _mark_loaded_targets_initialized(
     _validate_materialized(loaded_targets)
     for target in loaded_targets:
         target.tensor._is_hf_initialized = True  # pylint: disable=W0212
+        target.module._is_hf_initialized = True  # pylint: disable=W0212
         snapshots[target.fqn] = _snapshot_target(target)
     return snapshots
 
@@ -961,8 +968,13 @@ def _adjust_loading_keys(
     )
 
 
-def _prepare_initialization_targets(targets: list[_FinalizeTarget]) -> None:
-    """Clear stale initialization flags only for state that must be rebuilt."""
+def _prepare_initialization_targets(
+    model: nn.Module,
+    targets: list[_FinalizeTarget],
+) -> None:
+    """Reopen only modules that own missing or non-persistent state."""
+    for module in model.modules():
+        module._is_hf_initialized = True  # pylint: disable=W0212
     owner_modules = {}
     for target in targets:
         target.tensor._is_hf_initialized = False  # pylint: disable=W0212
@@ -1060,7 +1072,7 @@ def _finalize_model_loading(
     ]
     _validate_missing_initialization_targets(initialization_targets, missing_keys)
     _validate_materialized(initialization_targets)
-    _prepare_initialization_targets(initialization_targets)
+    _prepare_initialization_targets(model, initialization_targets)
     if initialization_targets:
         _initialize_model_state_after_loading(model)
         for target in initialization_targets:

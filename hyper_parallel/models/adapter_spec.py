@@ -57,6 +57,9 @@ class ModelAdapterSpec:
             never carries per-family knowledge.
         loss: provider returning model-family output-loss adapters that must
             intercept the model before a full terminal output is materialized.
+        dit: provider returning a DiT-family construction adapter. Diffusers
+            model classes remain upstream-owned; the adapter only resolves
+            config, checkpoint, and condition-model contracts.
     """
 
     architecture: str
@@ -68,3 +71,4 @@ class ModelAdapterSpec:
     expert_parallel: Optional[Callable[..., Any]] = None
     sharding_rules: Optional[Callable[..., Any]] = None
     loss: Optional[Callable[..., Any]] = None
+    dit: Optional[Callable[..., Any]] = None

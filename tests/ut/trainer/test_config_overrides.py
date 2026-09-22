@@ -60,6 +60,19 @@ optimizer:
   learning_rate: 0.01
 """
 
+_DATALOADER_YAML = """
+model:
+  _target_: {module}._sample_model
+  width: 8
+optimizer:
+  _target_: {module}._sample_optimizer
+  learning_rate: 0.01
+dataloader:
+  _target_: builtins.list
+  dataloader_type: distributed
+  shuffle: false
+"""
+
 
 class TestConfigOverrides(unittest.TestCase):
     """``--a.b=c`` overrides applied to a resolved trainer config."""
@@ -182,6 +195,25 @@ class TestConfigOverrides(unittest.TestCase):
             msg="case: invalid_yaml_value",
         ):
             self._parse("--model.width=[unclosed")
+
+    def test_distributed_dataloader_shuffle_is_typed(self) -> None:
+        """Wan-style distributed dataloader fields resolve and override as booleans."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yaml_path = Path(tmpdir) / "train.yaml"
+            yaml_path.write_text(_DATALOADER_YAML.format(module=__name__), encoding="utf-8")
+
+            config = parse_training_args([str(yaml_path), "--dataloader.shuffle=true"])
+
+        self.assertEqual(
+            config.dataloader.dataloader_type,
+            "distributed",
+            msg=f"dataloader_type={config.dataloader.dataloader_type!r}",
+        )
+        self.assertIs(
+            config.dataloader.shuffle,
+            True,
+            msg=f"shuffle={config.dataloader.shuffle!r}",
+        )
 
 
 if __name__ == "__main__":

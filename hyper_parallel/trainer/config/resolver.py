@@ -600,7 +600,7 @@ def _resolve_dataloader_config(node: object, *, path: str) -> DataLoaderConfig:
     get_batch_node = target_node.pop("get_batch", None)
     dataloader_type = normalize_value(
         target_node.pop("dataloader_type", "single"),
-        Literal["single", "cyclic"],
+        Literal["single", "cyclic", "distributed"],
         path=f"{path}.dataloader_type",
     )
     data_rearrange_map = target_node.pop("data_rearrange_map", None)
@@ -608,6 +608,11 @@ def _resolve_dataloader_config(node: object, *, path: str) -> DataLoaderConfig:
         target_node.pop("data_sharding", False),
         bool,
         path=f"{path}.data_sharding",
+    )
+    shuffle = normalize_value(
+        target_node.pop("shuffle", True),
+        bool,
+        path=f"{path}.shuffle",
     )
     target = _resolve_target(target_node, path=path)
     collate_fn = (
@@ -627,6 +632,7 @@ def _resolve_dataloader_config(node: object, *, path: str) -> DataLoaderConfig:
         dataloader_type=dataloader_type,
         data_rearrange_map=data_rearrange_map,
         data_sharding=data_sharding,
+        shuffle=shuffle,
     )
 
 

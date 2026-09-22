@@ -87,6 +87,25 @@ def test_lazy_family_discovery():
 
 @arg_mark(plat_marks=["cpu_linux", "cpu_macos"], level_mark="level0",
          card_mark="onecard", essential_mark="essential")
+def test_wan_family_discovery_stays_diffusers_lazy_subprocess():
+    """Wan registration exposes DiT providers without importing Diffusers."""
+    code = (
+        "import sys\n"
+        "from hyper_parallel.models.registry import get_model_adapter\n"
+        "spec = get_model_adapter('wan')\n"
+        "assert spec.architecture == 'WanTransformer3DModel', spec\n"
+        "assert spec.model_type == 'wan', spec\n"
+        "assert callable(spec.dit), spec\n"
+        "assert callable(spec.replacements), spec\n"
+        "assert 'diffusers' not in sys.modules, sorted(\n"
+        "    name for name in sys.modules if name.startswith('diffusers')\n"
+        ")\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+@arg_mark(plat_marks=["cpu_linux", "cpu_macos"], level_mark="level0",
+         card_mark="onecard", essential_mark="essential")
 def test_unknown_family_resolves_to_none():
     """No class-name guessing: an unknown model_type finds no adapter."""
     assert get_model_adapter("no_such_family") is None, "case: unknown"

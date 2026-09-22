@@ -22,6 +22,7 @@ and does not pull the model/data stack until a trainer class is touched.
 
 __all__ = [
     "BaseTrainer",
+    "DiTTrainer",
     "TextTrainer",
     "VLMTrainer",
     "TrainerState",
@@ -29,6 +30,7 @@ __all__ = [
 
 _LAZY_EXPORTS = {
     "BaseTrainer": "hyper_parallel.trainer.base",
+    "DiTTrainer": "hyper_parallel.trainer.dit_trainer",
     "TextTrainer": "hyper_parallel.trainer.text_trainer",
     "VLMTrainer": "hyper_parallel.trainer.vlm_trainer",
     "TrainerState": "hyper_parallel.trainer.state",
