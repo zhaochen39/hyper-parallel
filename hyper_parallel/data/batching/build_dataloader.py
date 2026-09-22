@@ -227,6 +227,7 @@ def build_dataloader(
                 data_rearrange_map=getattr(dataloader_target, "data_rearrange_map", None),
                 sampler_type=getattr(dataloader_target, "dataloader_type", "single"),
                 data_sharding=getattr(dataloader_target, "data_sharding", False),
+                shuffle=getattr(dataloader_target, "shuffle", True),
                 seed=training_config.seed if training_config.seed is not None else default_seed,
             )
 
