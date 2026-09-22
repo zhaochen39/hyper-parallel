@@ -44,6 +44,8 @@ from hyper_parallel.models.build_options import (
 if TYPE_CHECKING:
     from hyper_parallel.models._transformers import (
         HyperAutoModelForCausalLM,
+        HyperAutoModelForDiT,
+        resolve_dit_provider,
         HyperAutoModelForImageTextToText,
         HyperAutoModelForSequenceClassification,
     )
@@ -51,6 +53,8 @@ if TYPE_CHECKING:
 
 _LAZY_FACADE_EXPORTS = {
     "HyperAutoModelForCausalLM": "hyper_parallel.models._transformers",
+    "HyperAutoModelForDiT": "hyper_parallel.models._transformers",
+    "resolve_dit_provider": "hyper_parallel.models._transformers",
     "HyperAutoModelForImageTextToText": "hyper_parallel.models._transformers",
     "HyperAutoModelForSequenceClassification": "hyper_parallel.models._transformers",
 }
@@ -60,6 +64,8 @@ __all__ = [
     "FSDP2Config",
     "FSDP2MixedPrecisionConfig",
     "HyperAutoModelForCausalLM",
+    "HyperAutoModelForDiT",
+    "resolve_dit_provider",
     "HyperAutoModelForImageTextToText",
     "HyperAutoModelForSequenceClassification",
     "ModelAdapterSpec",
